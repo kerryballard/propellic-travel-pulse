@@ -262,64 +262,59 @@ function SparkCard({ subtitle, data, dataKey, color, formatter, dark }) {
 // ── Simplified Projection Calculator ─────────────────────────────
 // User only toggles Spend — Revenue and Conversions auto-calculate
 // from the client's actual trailing CPC, CVR, ABV
-function CampaignProjectionRow({ platform, platformColor, campaignName, monthly, windowMonths, dark }) {
-  const data    = derived(monthly);
-  const baseCpc = trailingAvg(data,"cpc",windowMonths);
-  const baseCvr = trailingAvg(data,"cvr",windowMonths);
-  const baseAbv = trailingAvg(data,"abv",windowMonths);
-  const defaultSpend = Math.round(trailingAvg(data,"spend",windowMonths));
-
-  const [spend, setSpend] = useState(defaultSpend);
-
-  const projClicks   = baseCpc>0 ? Math.round(spend/baseCpc) : 0;
-  const projBookings = Math.round(projClicks*(baseCvr/100));
-  const projRevenue  = Math.round(projBookings*baseAbv);
-  const projRoas     = spend>0 ? (projRevenue/spend).toFixed(2) : "—";
-  const projCpa      = projBookings>0 ? (spend/projBookings).toFixed(2) : "—";
-
-  const surface = dark?"bg-gray-800":"bg-white";
-  const text    = dark?"text-white":"text-slate-800";
-  const sub     = dark?"text-gray-400":"text-slate-400";
-  const inputBg = dark?"bg-gray-700 border-gray-600 text-white":"bg-slate-50 border-slate-200 text-slate-800";
-
-  return (
-    <div className={`border-b ${dark?"border-gray-700":"border-slate-100"} last:border-0`}>
-      <div className={`grid grid-cols-12 gap-2 items-center px-4 py-3 transition-colors ${dark?"hover:bg-gray-700":"hover:bg-slate-50"}`}>
-        {/* Platform + campaign */}
-        <div className="col-span-3 flex items-center gap-2">
+function CampaignProjectionRow({platform,platformColor,campaignName,monthly,windowMonths,dark}){
+  const data=derived(monthly);
+  const baseCpc=trailingAvg(data,"cpc",windowMonths);
+  const baseCvr=trailingAvg(data,"cvr",windowMonths);
+  const baseAbv=trailingAvg(data,"abv",windowMonths);
+  const[spend,setSpend]=useState(Math.round(trailingAvg(data,"spend",windowMonths)));
+  const projClicks=baseCpc>0?Math.round(spend/baseCpc):0;
+  const projBookings=Math.round(projClicks*(baseCvr/100));
+  const projRevenue=Math.round(projBookings*baseAbv);
+  const projRoas=spend>0?(projRevenue/spend).toFixed(2):"—";
+  const projCpa=projBookings>0?(spend/projBookings).toFixed(2):"—";
+  const surface=dark?"bg-gray-700":"bg-slate-50";
+  const text=dark?"text-white":"text-slate-800";
+  const sub=dark?"text-gray-400":"text-slate-500";
+  const cardBg=dark?"bg-gray-800 border-gray-600":"bg-white border-slate-200";
+  return(
+    <div className={`rounded-xl border p-3 mb-2 ${cardBg}`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full shrink-0" style={{backgroundColor:platformColor}}/>
-          <div>
-            <p className={`text-xs font-semibold ${text}`}>{campaignName}</p>
-            <p className={`text-xs ${sub}`}>{platform}</p>
-          </div>
+          <p className={`text-xs font-bold ${text}`}>{campaignName}</p>
         </div>
-
-        {/* Spend — editable */}
-        <div className="col-span-2">
-          <div className={`flex items-center gap-1 border rounded-lg px-2 py-1.5 ${inputBg}`}>
-            <span className={`text-xs ${sub}`}>$</span>
-            <input type="number" value={spend}
-              onChange={e=>setSpend(Math.max(0,Number(e.target.value)))}
-              className="w-full text-xs font-semibold bg-transparent outline-none" step={500}/>
-          </div>
+        <span className={`text-xs ${sub}`}>{platform}</span>
+      </div>
+      <div className="mb-3">
+        <label className={`text-xs font-medium mb-1 block ${sub}`}>Planned Spend</label>
+        <div className={`flex items-center gap-1 border rounded-lg px-3 py-2 ${surface} border-slate-200`}>
+          <span className={`text-xs ${sub}`}>$</span>
+          <input type="number" value={spend} onChange={e=>setSpend(Math.max(0,Number(e.target.value)))}
+            className={`w-full text-sm font-bold bg-transparent outline-none ${text}`} step={500}/>
         </div>
-
-        {/* Auto-calculated outputs */}
-        {[
-          { label:"Clicks",   value:projClicks.toLocaleString() },
-          { label:"Bookings", value:projBookings                },
-          { label:"Revenue",  value:`$${projRevenue.toLocaleString()}`, accent:true },
-          { label:"ROAS",     value:`${projRoas}x`,             accent:true },
-          { label:"CPA",      value:`$${projCpa}`,              warn: projCpa!=="—" && parseFloat(projCpa)>90 },
-        ].map((c,i) => (
-          <div key={i} className="col-span-1 text-center">
-            <p className={`text-xs font-semibold ${c.accent?"":"text-opacity-100"}`}
-              style={c.accent ? {color:BRAND} : c.warn ? {color:"#f97316"} : {color: dark?"#e5e7eb":"#334155"}}>
-              {c.value}
-            </p>
-            <p className={`text-xs ${sub}`}>{c.label}</p>
-          </div>
-        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className={`rounded-lg p-2 ${surface}`}>
+          <p className={`text-xs ${sub} mb-0.5`}>Clicks</p>
+          <p className={`text-sm font-bold ${text}`}>{projClicks.toLocaleString()}</p>
+        </div>
+        <div className={`rounded-lg p-2 ${surface}`}>
+          <p className={`text-xs ${sub} mb-0.5`}>Bookings</p>
+          <p className={`text-sm font-bold ${text}`}>{projBookings}</p>
+        </div>
+        <div className="rounded-lg p-2" style={{backgroundColor:BRAND_LIGHT}}>
+          <p className="text-xs mb-0.5" style={{color:BRAND}}>Revenue</p>
+          <p className="text-sm font-bold" style={{color:BRAND_DARK}}>${projRevenue.toLocaleString()}</p>
+        </div>
+        <div className="rounded-lg p-2" style={{backgroundColor:BRAND_LIGHT}}>
+          <p className="text-xs mb-0.5" style={{color:BRAND}}>ROAS</p>
+          <p className="text-sm font-bold" style={{color:BRAND_DARK}}>{projRoas}x</p>
+        </div>
+        <div className={`rounded-lg p-2 col-span-2 ${surface}`}>
+          <p className={`text-xs ${sub} mb-0.5`}>CPA</p>
+          <p className={`text-sm font-bold ${text}`}>${projCpa}</p>
+        </div>
       </div>
     </div>
   );
